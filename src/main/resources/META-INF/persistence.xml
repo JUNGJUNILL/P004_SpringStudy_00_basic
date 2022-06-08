@@ -11,17 +11,17 @@
             <!--
             test db
             jdbc:h2:tcp://localhost/~/test url
-
+    -->
             <property name="javax.persistence.jdbc.url" value="jdbc:h2:tcp://localhost/~/test"/>
-        -->
+
 
             <!--
             jpashop db
             jdbc:h2:./jpashop url
             id: sa , password : sa
-         -->
-            <property name="javax.persistence.jdbc.url" value="jdbc:h2:./jpashop"/>
 
+            <property name="javax.persistence.jdbc.url" value="jdbc:h2:./jpashop"/>
+  -->
             <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
 
             <!-- 옵션 -->
