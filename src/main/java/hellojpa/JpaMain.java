@@ -5,6 +5,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import java.util.Date;
+import java.util.List;
 
 public class JpaMain {
 
@@ -96,7 +97,7 @@ public class JpaMain {
             //System.out.println(member1==member2); //동일성 보장
 
 
-
+            /*
             tx.begin();
             Team team =new Team();
             team.setName("TeamA");
@@ -107,13 +108,51 @@ public class JpaMain {
             member3.setTeam(team);
             em.persist(member3);
 
+            em.flush();
+            em.clear();
+
             Member3 findMember = em.find(Member3.class,member3.getId());
 
             Team findTeam = findMember.getTeam();
-            System.out.println("findTeam.getName()= "+findTeam.getName());
 
+
+            for(Member3 list : findMember.getTeam().getMember3()){
+                System.out.println("getUsername=>"+list.getUsername());
+            }
 
             tx.commit();
+            */
+
+
+            //연관관계의 주인 예제
+            tx.begin();
+
+            Team team =new Team();
+            team.setName("TeamAAA");
+            em.persist(team);
+
+
+            Member3 member3= new Member3();
+            member3.setUsername("member3");
+   //         member3.setTeam(team);  //순수 객체 상태를 고려해서 항상 양쪽에 값을 설정하자
+
+//            연관관계 편의메서드(01번 버젼)
+//            member3.changeTeam(team);
+
+//            연관관계 편의메서드(02번 버젼)
+            team.addMember(member3);
+            em.persist(member3);
+//            team.getMember3().add(member3); //순수 객체 상태를 고려해서 항상 양쪽에 값을 설정하자
+                                                                            //이거 안쓸거면 연관관계 편의 메서드를 만들어서 사용하자.
+
+//            em.flush();
+//            em.clear();
+
+            Team fineTeam=em.find(Team.class,team.getId());
+            List<Member3> members = fineTeam.getMember3();
+
+            tx.commit();
+
 
         }catch(Exception e){
             tx.rollback();

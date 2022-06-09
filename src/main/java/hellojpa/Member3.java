@@ -2,6 +2,9 @@ package hellojpa;
 
 import javax.persistence.*;
 
+
+//FK가 있는 곳이 연관관계의 주인이다.
+//Member3 (N) : Team (1)
 @Entity
 public class Member3 {
 
@@ -18,7 +21,7 @@ public class Member3 {
 
     @ManyToOne
     @JoinColumn(name = "TEAM_ID")
-    private Team team;
+    private Team tttt;
 
     public Long getId() {
         return id;
@@ -37,10 +40,21 @@ public class Member3 {
     }
 
     public Team getTeam() {
-        return team;
+        return tttt;
     }
 
-    public void setTeam(Team team) {
-        this.team = team;
+    //연관관계 편의 메서드를 생성하자.
+    //01번 버젼
+    public void changeTeam(Team team) {
+        this.tttt = team;
+        tttt.getMember3().add(this);
+    }
+
+    public Team getTttt() {
+        return tttt;
+    }
+
+    public void setTttt(Team tttt) {
+        this.tttt = tttt;
     }
 }

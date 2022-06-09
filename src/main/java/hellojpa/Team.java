@@ -1,10 +1,9 @@
 package hellojpa;
 
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class Team {
@@ -15,6 +14,15 @@ public class Team {
     private Long id;
     private String name;
 
+    @OneToMany(mappedBy = "tttt") //읽기 전용이다.
+    private List<Member3> members=new ArrayList<>();
+
+    //연관관계 편의 메서드를 생성하자.
+    //02번 버젼
+    public void addMember(Member3 member3){
+        member3.setTttt(this);
+        members.add(member3);
+    }
 
     public Long getId() {
         return id;
@@ -32,5 +40,11 @@ public class Team {
         this.name = name;
     }
 
+    public List<Member3> getMember3() {
+        return members;
+    }
 
+    public void setMember3(List<Member3> member3) {
+        this.members = member3;
+    }
 }
