@@ -134,6 +134,9 @@ public class JpaMain {
 
             Member3 member3= new Member3();
             member3.setUsername("member3");
+
+            Member3 member3_01=new Member3();
+            member3_01.setUsername("member3_01");
    //         member3.setTeam(team);  //순수 객체 상태를 고려해서 항상 양쪽에 값을 설정하자
 
 //            연관관계 편의메서드(01번 버젼)
@@ -141,7 +144,9 @@ public class JpaMain {
 
 //            연관관계 편의메서드(02번 버젼)
             team.addMember(member3);
+            team.addMember(member3_01);
             em.persist(member3);
+            em.persist(member3_01);
 //            team.getMember3().add(member3); //순수 객체 상태를 고려해서 항상 양쪽에 값을 설정하자
                                                                             //이거 안쓸거면 연관관계 편의 메서드를 만들어서 사용하자.
 
@@ -150,6 +155,12 @@ public class JpaMain {
 
             Team fineTeam=em.find(Team.class,team.getId());
             List<Member3> members = fineTeam.getMember3();
+
+
+            for(int i=0; i<members.size(); i++){
+
+                System.out.println("username= "+members.get(i).getUsername());
+            }
 
             tx.commit();
 

@@ -4,6 +4,7 @@ import javax.persistence.*;
 
 
 //FK가 있는 곳이 연관관계의 주인이다.
+//다 대 일 단반향 매핑
 //Member3 (N) : Team (1)
 @Entity
 public class Member3 {
