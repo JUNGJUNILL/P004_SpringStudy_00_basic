@@ -1,11 +1,13 @@
 package hellojpa;
 
+import Item_JOINED_STRATEGY.Movie;
+import Item_SINGLE_TABLE_STRATEGY.Movie_S;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import java.util.Date;
-import java.util.List;
 
 public class JpaMain {
 
@@ -51,6 +53,67 @@ public class JpaMain {
         Member findMember = em.find(Member.class,id);
         findMember.setName(name);
         em.detach(findMember); //영속성 컨텍스트에서 관리하지마.
+
+        tx.commit();
+
+    }
+
+    //상속관계 매핑
+    //JOINED_STRATEGY
+    /*
+    • 장점
+        • 테이블 정규화
+        • 외래 키 참조 무결성 제약조건 활용가능
+        • 저장공간 효율화
+    • 단점
+        • 조회시 조인을 많이 사용, 성능 저하
+        • 조회 쿼리가 복잡함
+        • 데이터 저장시 INSERT SQL 2번 호출
+    */
+    private static void func001(EntityManager em, EntityTransaction tx){
+
+        tx.begin();
+        Movie movie=new Movie();
+        movie.setName("parasite");
+        movie.setDirector("bong");
+        movie.setActor("song");
+        movie.setPrice(1000);
+        em.persist(movie);
+
+        em.flush();
+        em.clear();
+
+        Movie findMovie = em.find(Movie.class,1l);
+        System.out.println("getDirector()="+findMovie.getDirector());
+
+        tx.commit();
+
+    }
+
+    //상속관계 매핑
+    //SINGLE_TABLE_STRATEGY
+    /*
+    • 장점
+        • 조인이 필요 없으므로 일반적으로 조회 성능이 빠름
+        • 조회 쿼리가 단순함
+    • 단점
+        • 자식 엔티티가 매핑한 컬럼은 모두 null 허용
+        • 단일 테이블에 모든 것을 저장하므로 테이블이 커질 수 있다. 상황에 따라서 조회 성능이 오히려 느려질 수 있다.
+    */
+    private static void func002(EntityManager em, EntityTransaction tx){
+        tx.begin();
+        Movie_S movie=new Movie_S();
+        movie.setName("CASHTRUCK");
+        movie.setDirector("JJI");
+        movie.setActor("JSON");
+        movie.setPrice(1000);
+        em.persist(movie);
+
+        em.flush();
+        em.clear();
+
+        Movie_S findMovie = em.find(Movie_S.class,1l);
+        System.out.println("getDirector()="+findMovie.getDirector());
 
         tx.commit();
 
@@ -125,7 +188,7 @@ public class JpaMain {
 
 
             //연관관계의 주인 예제
-            tx.begin();
+           /* tx.begin();
 
             Team team =new Team();
             team.setName("TeamAAA");
@@ -163,6 +226,14 @@ public class JpaMain {
             }
 
             tx.commit();
+            */
+
+
+            //상속관계 매핑
+//            func001(em,tx);
+            func002(em,tx);
+
+
 
 
         }catch(Exception e){
