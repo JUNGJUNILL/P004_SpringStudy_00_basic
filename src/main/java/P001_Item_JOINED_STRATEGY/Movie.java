@@ -1,4 +1,4 @@
-package Item_JOINED_STRATEGY;
+package P001_Item_JOINED_STRATEGY;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;

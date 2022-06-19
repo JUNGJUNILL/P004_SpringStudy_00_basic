@@ -1,11 +1,11 @@
-package Item_TABLE_PER_CLASS_STRATEGY;
+package P002_Item_SINGLE_TABLE_STRATEGY;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
 @Entity
 @DiscriminatorValue("B")
-public class Book_C extends Item_C {
+public class Book_S extends Item_S {
 
     private String author;
     private String isbn;

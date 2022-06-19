@@ -1,11 +1,11 @@
-package Item_TABLE_PER_CLASS_STRATEGY;
+package P001_Item_JOINED_STRATEGY;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
 @Entity
 @DiscriminatorValue("A")
-public class Album_C extends Item_C {
+public class Album extends Item{
 
 
     private String artist;

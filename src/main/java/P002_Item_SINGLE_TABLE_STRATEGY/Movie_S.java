@@ -1,4 +1,4 @@
-package Item_SINGLE_TABLE_STRATEGY;
+package P002_Item_SINGLE_TABLE_STRATEGY;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;

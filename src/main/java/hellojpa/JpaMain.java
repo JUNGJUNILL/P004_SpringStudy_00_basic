@@ -1,12 +1,15 @@
 package hellojpa;
 
-import Item_JOINED_STRATEGY.Movie;
-import Item_SINGLE_TABLE_STRATEGY.Movie_S;
+import P001_Item_JOINED_STRATEGY.Movie;
+import P002_Item_SINGLE_TABLE_STRATEGY.Movie_S;
+import P004_Item_MappedSuperClass.Member_M;
+import org.hibernate.Hibernate;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 public class JpaMain {
@@ -116,6 +119,150 @@ public class JpaMain {
         System.out.println("getDirector()="+findMovie.getDirector());
 
         tx.commit();
+
+    }
+
+    //@MappedSuperClass
+    /*
+    • 상속관계 매핑X
+    • 엔티티X, 테이블과 매핑X
+    • 부모 클래스를 상속 받는 자식 클래스에 매핑 정보만 제공
+    • 조회, 검색 불가(em.find(BaseEntity) 불가)
+    • 직접 생성해서 사용할 일이 없으므로 추상 클래스 권장
+    • 테이블과 관계 없고, 단순히 엔티티가 공통으로 사용하는 매핑정보를 모으는 역할
+    • 주로 등록일, 수정일, 등록자, 수정자 같은 전체 엔티티에서 공통으로 적용하는 정보를 모을 때 사용
+    • 참고: @Entity 클래스는 엔티티나 @MappedSuperclass로 지정한 클래스만 상속 가능
+    */
+    private static void func004(EntityManager em, EntityTransaction tx){
+        tx.begin();
+        Member_M member_m =new Member_M();
+        member_m.setUsername("HELLO");
+        member_m.setCreatedBy("JJI");
+        member_m.setCreatedDate(LocalDateTime.now());
+        em.persist(member_m);
+
+        em.flush();
+        em.clear();
+
+        tx.commit();
+
+    }
+
+    //프록시
+    //• 프록시 객체는 처음 사용할 때 한 번만 초기화
+    //• 프록시 객체를 초기화 할 때, 프록시 객체가 실제 엔티티로 바뀌는 것은 아님, 초기화되면 프록시 객체를 통해서 실제 엔티티에 접근 가능
+    private static void func005(EntityManager em, EntityTransaction tx){
+        tx.begin();
+        Member_M member_m=new Member_M();
+        member_m.setUsername("JJI1");
+        em.persist(member_m);
+
+        Member_M member_m2=new Member_M();
+        member_m2.setUsername("JJI2");
+        em.persist(member_m2);
+        em.flush();
+        em.clear();
+
+ //---프록시 객체는 원본 엔티티를 상속받음, 따라서 타입 체크시 주의해야함 (== 비교 실패, 대신 instance of 사용)--/
+        Member_M m1=em.find(Member_M.class,member_m.getId());
+        Member_M m3=em.getReference(Member_M.class,member_m2.getId());
+
+        System.out.println("m1 == m3 ="+ (m1.getClass()==m3.getClass()));
+        System.out.println((m1 instanceof Member_M));
+        System.out.println((m3 instanceof Member_M));
+//-------------------------------------------------------------------------------/
+
+
+//---• 영속성 컨텍스트에 찾는 엔티티가 이미 있으면 em.getReference()를 호출해도 실제 엔티티 반환--/
+        Member_M reference = em.getReference(Member_M.class,member_m.getId());
+        System.out.println("m1.getClass()=" + m1.getClass());
+        System.out.println("reference.getClass()=" + reference.getClass());
+        System.out.println("a == a: " + (m1 == reference));
+//-------------------------------------------------------------------------------/
+
+
+
+        Member_M findMember =em.getReference(Member_M.class,member_m.getId());
+        //em.getReference() : 데이터베이스 조회를 미루는 가짜(프록시) 엔티티 객체 조회
+        System.out.println(findMember.getClass());
+        System.out.println("Member_m.id="+member_m.getId());
+        System.out.println("Member_m.userName="+member_m.getUsername());
+
+
+
+        tx.commit();
+    }
+
+    //프록시
+    /*
+    실무에서 진짜 많이 만나게 된다.
+
+    • 영속성 컨텍스트의 도움을 받을 수 없는 준영속 상태일 때, 프록시를 초기화하면
+    문제 발생
+    (하이버네이트는 org.hibernate.LazyInitializationException 예외를 터트림)
+    */
+    private static void func006(EntityManager em, EntityTransaction tx){
+
+        try{
+
+
+        tx.begin();
+        Member_M member_m=new Member_M();
+        member_m.setUsername("JJI1");
+        em.persist(member_m);
+
+        em.flush();
+        em.clear();
+
+        Member_M refMember=em.getReference(Member_M.class,member_m.getId());
+        System.out.println("refMember = " + refMember.getClass()); //Proxy
+//        em.detach(refMember);
+//        em.close();
+
+            System.out.println();
+
+        System.out.println(refMember.getUsername());
+
+
+
+
+        tx.commit();
+        }catch (Exception e){
+            System.out.println(e);
+        }
+
+    }
+
+    //프록시
+    private static void func007(EntityManagerFactory emf, EntityManager em, EntityTransaction tx){
+
+        try{
+            tx.begin();
+            Member_M member_m=new Member_M();
+            member_m.setUsername("JJI1");
+            em.persist(member_m);
+
+            em.flush();
+            em.clear();
+
+            //• 프록시 인스턴스의 초기화 여부 확인
+            //PersistenceUnitUtil.isLoaded(Object entity)
+            Member_M refMember=em.getReference(Member_M.class,member_m.getId());
+            System.out.println("isLoaded = " + emf.getPersistenceUnitUtil().isLoaded(refMember)); //false
+            //System.out.println(refMember.getUsername()); //이때 프록시가 초기화 된다.
+
+            //• 프록시 클래스 확인 방법
+            System.out.println("refMember = " + refMember.getClass());
+            
+            
+            //• 프록시 강제 초기화 방법
+            Hibernate.initialize(refMember); //강제 초기화
+            System.out.println("isLoaded = " + emf.getPersistenceUnitUtil().isLoaded(refMember)); //true
+
+            tx.commit();
+        }catch (Exception e){
+            System.out.println(e);
+        }
 
     }
 
@@ -231,8 +378,11 @@ public class JpaMain {
 
             //상속관계 매핑
 //            func001(em,tx);
-            func002(em,tx);
-
+//            func002(em,tx);
+//            func004(em,tx);
+//            func005(em,tx);
+//            func006(em,tx);
+            func007(emf,em,tx);
 
 
 

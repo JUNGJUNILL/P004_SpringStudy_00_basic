@@ -1,4 +1,4 @@
-package Item_TABLE_PER_CLASS_STRATEGY;
+package P003_Item_TABLE_PER_CLASS_STRATEGY;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;

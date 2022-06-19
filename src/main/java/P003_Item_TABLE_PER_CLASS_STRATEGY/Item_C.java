@@ -1,12 +1,12 @@
-package Item_JOINED_STRATEGY;
+package P003_Item_TABLE_PER_CLASS_STRATEGY;
 
 
 import javax.persistence.*;
 
+//추천하는 방법은 아님
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED) //default는 SINGLE_TABLE이다.
-@DiscriminatorColumn //DTYPE이라는 컬럼이 생성(clientgubun역할을 하는 컬럼)
-public class Item {
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS) //default는 SINGLE_TABLE이다. 테이블 하나로 다 때려 박는 방법
+public abstract class Item_C {
 
 
     @Id

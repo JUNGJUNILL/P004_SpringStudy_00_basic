@@ -1,14 +1,13 @@
-package hellojpa;
+package P004_Item_MappedSuperClass;
 
-
-import P004_Item_MappedSuperClass.BaseEntity;
+import hellojpa.Member3;
 
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-public class Team  {
+public class Team_M extends BaseEntity{
 
     @Id
     @GeneratedValue
@@ -17,13 +16,13 @@ public class Team  {
     private String name;
 
     @OneToMany(mappedBy = "tttt") //읽기 전용이다.
-    private List<Member3> members=new ArrayList<>();
+    private List<Member_M> members=new ArrayList<>();
 
     //연관관계 편의 메서드를 생성하자.
     //02번 버젼
-    public void addMember(Member3 member3){
-        member3.setTttt(this);
-        members.add(member3);
+    public void addMember(Member_M member_m){
+        member_m.setTttt(this);
+        members.add(member_m);
     }
 
     public Long getId() {
@@ -42,11 +41,4 @@ public class Team  {
         this.name = name;
     }
 
-    public List<Member3> getMember3() {
-        return members;
-    }
-
-    public void setMember3(List<Member3> member3) {
-        this.members = member3;
-    }
 }
