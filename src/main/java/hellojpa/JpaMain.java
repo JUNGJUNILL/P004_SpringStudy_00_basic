@@ -3,6 +3,11 @@ package hellojpa;
 import P001_Item_JOINED_STRATEGY.Movie;
 import P002_Item_SINGLE_TABLE_STRATEGY.Movie_S;
 import P004_Item_MappedSuperClass.Member_M;
+import P004_Item_MappedSuperClass.Team_M;
+import P005_CASECADE.Child;
+import P005_CASECADE.Parent;
+import P006_ORPANREMOVAL.Child_O;
+import P006_ORPANREMOVAL.Parent_O;
 import org.hibernate.Hibernate;
 
 import javax.persistence.EntityManager;
@@ -11,6 +16,7 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 public class JpaMain {
 
@@ -197,6 +203,9 @@ public class JpaMain {
     /*
     실무에서 진짜 많이 만나게 된다.
 
+    ★★
+    즉 프록시를 사용하면 엔티티가 사용될 때 까지 조회하지 않고 있다가 필요할 때 조회하는 방식이라는 것을 알 수 있습니다.
+
     • 영속성 컨텍스트의 도움을 받을 수 없는 준영속 상태일 때, 프록시를 초기화하면
     문제 발생
     (하이버네이트는 org.hibernate.LazyInitializationException 예외를 터트림)
@@ -263,6 +272,140 @@ public class JpaMain {
         }catch (Exception e){
             System.out.println(e);
         }
+
+    }
+
+    //프록시 - 지연 로딩(LAZY) (실무에서는 "즉시로딩(EAGER) 사용 X")
+    private static void func008(EntityManager em, EntityTransaction tx){
+        try{
+            tx.begin();
+
+            Team_M team = new Team_M();
+            team.setName("TeamA");
+            em.persist(team);
+
+            Member_M member_m=new Member_M();
+            member_m.setUsername("JJI1");
+            member_m.setTttt(team);
+            em.persist(member_m);
+
+            em.flush();
+            em.clear();
+
+            Member_M m =em.find(Member_M.class,member_m.getId());
+            System.out.println("M=" +m.getTttt().getClass());
+
+            //지연 로딩 LAZY을 사용해서 프록시로 조회
+            System.out.println("================");
+            //프록시 초기화(실제 team을 사용하는 시점에 초기화(DB조회))
+            m.getTttt().getName();
+            System.out.println("================");
+
+            tx.commit();
+        }catch (Exception e){
+            System.out.println(e);
+        }
+
+    }
+
+    //즉시로딩(EAGER)은 JPQL N+1 문제를 일으킨다.
+    //(쓸데없는 쿼리가 막 실행됨)
+    private static void func009(EntityManager em, EntityTransaction tx){
+        try{
+            tx.begin();
+
+            Team_M teamA = new Team_M();
+            teamA.setName("TeamA");
+            em.persist(teamA);
+
+            Team_M teamB = new Team_M();
+            teamB.setName("TeamB");
+            em.persist(teamB);
+
+            Member_M member_m=new Member_M();
+            member_m.setUsername("JJI1");
+            member_m.setTttt(teamA);
+            em.persist(member_m);
+
+            Member_M member_m2=new Member_M();
+            member_m2.setUsername("JJI2");
+            member_m2.setTttt(teamB);
+            em.persist(member_m2);
+
+            em.flush();
+            em.clear();
+
+            List<Member_M> list=em.createQuery("select m from Member_M m",Member_M.class).getResultList();
+
+
+            tx.commit();
+        }catch (Exception e){
+            System.out.println(e);
+        }
+
+
+
+    }
+
+    //CASECADE
+    //부모 엔티티를 저장할 때 자식 엔티티도 함께 저장
+    //하나의 부모가 자식들을 관리 할 때 사용(단일 테이블에 완전히 종속적일때, 라이프 사이클이 유사 할 때)
+    private static void func010(EntityManager em, EntityTransaction tx){
+
+        try{tx.begin();
+        Child child1 =new Child();
+        child1.setName("child1");
+        Child child2 =new Child();
+        child2.setName("child2");
+
+        Parent parent=new Parent();
+
+        parent.setName("mom1");
+        parent.addChild(child1);
+        parent.addChild(child2);
+
+        em.persist(parent); //em.persist를 한방에 
+
+        tx.commit();
+    }catch (Exception e){
+        System.out.println(e);
+    }
+
+
+    }
+
+
+    //고아객체
+    //• 참조하는 곳이 하나일 때 사용해야함!
+    //• 특정 엔티티가 개인 소유할 때 사용
+    private static void func011(EntityManager em, EntityTransaction tx){
+
+        try{tx.begin();
+            Child_O child1 =new Child_O();
+            child1.setName("child1");
+            Child_O child2 =new Child_O();
+            child2.setName("child2");
+
+            Parent_O parent=new Parent_O();
+
+            parent.setName("mom1");
+            parent.addChild(child1);
+            parent.addChild(child2);
+
+            em.persist(parent); //em.persist를 한방에 , em.remove(parent) 일 때도 하위 자식 테이블도 다 삭제 됨
+
+            em.flush();
+            em.clear();
+
+            Parent_O findParent =em.find(Parent_O.class,parent.getId());
+            findParent.getChildList().remove(0);
+
+
+            tx.commit();
+        }catch (Exception e){
+            System.out.println(e);
+        }
+
 
     }
 
@@ -382,9 +525,11 @@ public class JpaMain {
 //            func004(em,tx);
 //            func005(em,tx);
 //            func006(em,tx);
-            func007(emf,em,tx);
-
-
+//            func007(emf,em,tx);
+//            func008(em,tx);
+//            func009(em,tx);
+//            func010(em,tx);
+            func011(em,tx);
 
         }catch(Exception e){
             tx.rollback();

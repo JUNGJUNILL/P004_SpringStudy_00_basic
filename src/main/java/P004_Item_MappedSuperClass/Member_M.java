@@ -17,8 +17,8 @@ public class Member_M extends BaseEntity{
     private String username;
 
 
-    @ManyToOne
-    @JoinColumn(name = "TEAM_ID" ,insertable = false, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY) //Team_M 객체는 프록시 객체가 된다.
+    @JoinColumn(name = "TEAM_ID")
     private Team_M tttt;
 
     @OneToOne
