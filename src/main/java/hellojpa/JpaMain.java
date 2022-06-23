@@ -8,6 +8,9 @@ import P005_CASECADE.Child;
 import P005_CASECADE.Parent;
 import P006_ORPANREMOVAL.Child_O;
 import P006_ORPANREMOVAL.Parent_O;
+import P007_embeddedType.Address;
+import P007_embeddedType.Member_em;
+import P007_embeddedType.Period;
 import org.hibernate.Hibernate;
 
 import javax.persistence.EntityManager;
@@ -380,7 +383,8 @@ public class JpaMain {
     //• 특정 엔티티가 개인 소유할 때 사용
     private static void func011(EntityManager em, EntityTransaction tx){
 
-        try{tx.begin();
+        try{
+            tx.begin();
             Child_O child1 =new Child_O();
             child1.setName("child1");
             Child_O child2 =new Child_O();
@@ -406,6 +410,78 @@ public class JpaMain {
             System.out.println(e);
         }
 
+
+    }
+
+    //임베디드 타입
+    //컬럼의 속성을 묶는 것
+    private static void func012(EntityManager em, EntityTransaction tx){
+        try{
+            tx.begin();
+
+            Member_em member_em = new Member_em();
+
+           // member_em.setId(1L); //detached entity passed to persist
+            member_em.setUsername("jji");
+            member_em.setAddress(new Address("buchen","Gil","1500"));
+            member_em.setPeriod(new Period());
+
+            em.flush();
+            em.clear();
+
+            em.persist(member_em);
+
+            tx.commit();
+        }catch (Exception e){
+            System.out.println(e);
+        }
+    }
+
+    //값 타입 공유 참조
+    //임베디드 타입 같은 값 타입을 여러 엔티티에서 공유해서 사용하면 위험함
+    //객체의 공유 참조는 피할 수 없다.
+
+    /*
+    • 객체 타입을 수정할 수 없게 만들면 부작용을 원천 차단
+    • 값 타입은 불변 객체(immutable object)로 설계해야함
+    • 불변 객체: 생성 시점 이후 절대 값을 변경할 수 없는 객체
+    • 생성자로만 값을 설정하고 수정자(Setter)를 만들지 않으면 됨
+    • 참고: Integer, String은 자바가 제공하는 대표적인 불변 객체
+
+    불변이라는 작은 제약으로 부작용이라는 큰 재앙을 막을 수 있다.
+
+    */
+    private static void func013(EntityManager em, EntityTransaction tx){
+        try{
+            tx.begin();
+            Address address=new Address("buchen","Gil","1500");
+
+            Member_em member_em1 = new Member_em();
+            member_em1.setUsername("jji");
+            member_em1.setAddress(address);
+            member_em1.setPeriod(new Period());
+            em.persist(member_em1);
+
+            Address copyAdress=new Address(address.getCity(),address.getStreet(),address.getZipcode());
+
+            Member_em member_em2 = new Member_em();
+            member_em2.setUsername("Hello");
+            member_em2.setAddress(copyAdress);
+            member_em2.setPeriod(new Period());
+            em.persist(member_em2);
+
+
+            member_em1.getAddress().setCity("newCity"); //member1, member2 두개다 newCity로 업데이트 쳐짐(copyAdress 안만들 경우)
+
+
+
+
+
+
+            tx.commit();
+        }catch (Exception e){
+            System.out.println(e);
+        }
 
     }
 
@@ -529,8 +605,9 @@ public class JpaMain {
 //            func008(em,tx);
 //            func009(em,tx);
 //            func010(em,tx);
-            func011(em,tx);
-
+//            func011(em,tx);
+//            func012(em,tx);
+            func013(em,tx);
         }catch(Exception e){
             tx.rollback();
         }finally {
