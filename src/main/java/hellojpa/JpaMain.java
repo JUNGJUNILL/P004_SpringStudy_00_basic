@@ -11,6 +11,11 @@ import P006_ORPANREMOVAL.Parent_O;
 import P007_embeddedType.Address;
 import P007_embeddedType.Member_em;
 import P007_embeddedType.Period;
+import P008_embeddedTypeCollection.Address_em01;
+import P008_embeddedTypeCollection.Mebmer_em01;
+import P009_embeddedTypeCollection.AddressEntity;
+import P009_embeddedTypeCollection.Address_em02;
+import P009_embeddedTypeCollection.Member_em02;
 import org.hibernate.Hibernate;
 
 import javax.persistence.EntityManager;
@@ -485,6 +490,158 @@ public class JpaMain {
 
     }
 
+    //값 타입 컬렉션
+    //• 값 타입 조회 예제
+    //• 값 타입 컬렉션도 지연 로딩 전략 사용
+    private static void func014(EntityManager em, EntityTransaction tx){
+
+        try{
+            tx.begin();
+            Mebmer_em01 member = new Mebmer_em01();
+            member.setUsername("user_a");
+            member.setHomeAddress(new Address_em01("homeCity","street","10000"));
+            
+            member.getFavoriteFoods().add("치킨");
+            member.getFavoriteFoods().add("피자");
+            member.getFavoriteFoods().add("콜라");
+
+            member.getAddressHistory().add(new Address_em01("old1","old_street1","11000"));
+            member.getAddressHistory().add(new Address_em01("old2","old_street2","12000"));
+
+            //member만 persist 했는데 나머지 테이블에도 자동으로 값이 들어가진다.
+            em.persist(member);
+
+
+             em.flush();
+             em.clear();
+            System.out.println("===========================================");
+            Mebmer_em01 findMember =  em.find(Mebmer_em01.class,member.getId());
+
+
+            List<Address_em01> addressHistory = findMember.getAddressHistory();
+
+            //지연로딩으로 인해 필요할 때 사용할 때만 쿼리가 실행된다.
+            for(Address_em01  address : addressHistory){
+                System.out.println("address = " + address.getCity());
+            }
+
+            tx.commit();
+        }catch (Exception e){
+            System.out.println(e);
+        }
+    }
+
+
+    //값 타입 컬렉션
+    //• 값 타입 수정 예제
+    //• 값 타입 컬렉션도 지연 로딩 전략 사용
+    private static void func015(EntityManager em, EntityTransaction tx) {
+        try{
+            tx.begin();
+            Mebmer_em01 member = new Mebmer_em01();
+            member.setUsername("user_a");
+            member.setHomeAddress(new Address_em01("homeCity","street","10000"));
+
+            member.getFavoriteFoods().add("치킨");
+            member.getFavoriteFoods().add("피자");
+            member.getFavoriteFoods().add("콜라");
+
+            member.getAddressHistory().add(new Address_em01("old1","old_street1","11000"));
+            member.getAddressHistory().add(new Address_em01("old2","old_street2","12000"));
+
+            //member만 persist 했는데 나머지 테이블에도 자동으로 값이 들어가진다.
+            em.persist(member);
+
+
+            em.flush();
+            em.clear();
+            System.out.println("===========================================");
+            Mebmer_em01 findMember =  em.find(Mebmer_em01.class,member.getId());
+
+            //homeCity -> newHomeCity
+//          • 객체 타입을 수정할 수 없게 만들면 부작용을 원천 차단
+//          • 값 타입은 불변 객체(immutable object)로 설계해야함
+//          • 불변 객체: 생성 시점 이후 절대 값을 변경할 수 없는 객체
+//          • 생성자로만 값을 설정하고 수정자(Setter)를 만들지 않으면 됨
+            Address_em01 address = findMember.getHomeAddress();
+            findMember.setHomeAddress(new Address_em01("newHomeCity",address.getStreet(),address.getZipcode()));
+
+            //치킨 -> 김치찌개
+            //String 이므로 아예 갈아끼워야 한다.
+            findMember.getFavoriteFoods().remove("치킨"); //delete sql
+            findMember.getFavoriteFoods().add("김치찌개"); //insert sql
+
+            //old1 -> newCity1
+            //(Address_em01 클레스에서 equals 함수가 오버라이드 되어 있어야 한다.)
+            //실무에서는 이렇게 쓰지 않음..
+            findMember.getAddressHistory().remove(new Address_em01("old1","old_street1","11000")); //delete sql
+            findMember.getAddressHistory().add(new Address_em01("newCity1","old_street1","11000")); //insert sql
+            
+            tx.commit();
+        }catch (Exception e){
+            System.out.println(e);
+        }
+
+    }
+
+
+
+    //    값 타입 컬렉션 대안 (실무에서 쓰는 방법)
+    //• 실무에서는 상황에 따라 값 타입 컬렉션 대신에 일대다 관계를 고려
+    //
+    //• 일대다 관계를 위한 엔티티를 만들고, 여기에서 값 타입을 사용
+    //• 영속성 전이(Cascade) + 고아 객체 제거를 사용해서 값 타입 컬
+    //    렉션 처럼 사용
+    //• EX) AddressEntity
+    private static void func016(EntityManager em, EntityTransaction tx) {
+        try{
+            tx.begin();
+            Member_em02 member = new Member_em02();
+            member.setUsername("user_B");
+            member.setHomeAddress(new Address_em02("homeCity","street","10000"));
+
+            member.getFavoriteFoods().add("치킨");
+            member.getFavoriteFoods().add("피자");
+            member.getFavoriteFoods().add("콜라");
+
+            member.getAddressHistory().add(new AddressEntity("old1","old_street1","11000"));
+            member.getAddressHistory().add(new AddressEntity("old2","old_street2","12000"));
+
+            //member만 persist 했는데 나머지 테이블에도 자동으로 값이 들어가진다.
+            em.persist(member);
+
+
+            em.flush();
+            em.clear();
+            System.out.println("===========================================");
+            Member_em02 findMember =  em.find(Member_em02.class,member.getId());
+
+            //homeCity -> newHomeCity
+//          • 객체 타입을 수정할 수 없게 만들면 부작용을 원천 차단
+//          • 값 타입은 불변 객체(immutable object)로 설계해야함
+//          • 불변 객체: 생성 시점 이후 절대 값을 변경할 수 없는 객체
+//          • 생성자로만 값을 설정하고 수정자(Setter)를 만들지 않으면 됨
+//            Address_em01 address = findMember.getHomeAddress();
+//            findMember.setHomeAddress(new Address_em01("newHomeCity",address.getStreet(),address.getZipcode()));
+//
+//            //치킨 -> 김치찌개
+//            //String 이므로 아예 갈아끼워야 한다.
+//            findMember.getFavoriteFoods().remove("치킨"); //delete sql
+//            findMember.getFavoriteFoods().add("김치찌개"); //insert sql
+//
+//            //old1 -> newCity1
+//            //(Address_em01 클레스에서 equals 함수가 오버라이드 되어 있어야 한다.)
+//            //실무에서는 이렇게 쓰지 않음..
+//            findMember.getAddressHistory().remove(new Address_em01("old1","old_street1","11000")); //delete sql
+//            findMember.getAddressHistory().add(new Address_em01("newCity1","old_street1","11000")); //insert sql
+
+            tx.commit();
+        }catch (Exception e){
+            System.out.println(e);
+        }
+
+    }
+
 
     public static void main(String[] args) {
         System.out.println("hello jpa");
@@ -607,7 +764,11 @@ public class JpaMain {
 //            func010(em,tx);
 //            func011(em,tx);
 //            func012(em,tx);
-            func013(em,tx);
+//            func013(em,tx);
+//            func014(em,tx);
+//            func015(em,tx);
+            func016(em,tx);
+
         }catch(Exception e){
             tx.rollback();
         }finally {
